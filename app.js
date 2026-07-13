@@ -1,8 +1,8 @@
 const $ = s => document.querySelector(s);
 const CAT = {
-  coffee:     { label:'Kopi',      emoji:'☕' },
-  'non-coffee':{ label:'Non-Kopi', emoji:'🍵' },
-  food:       { label:'Makanan',   emoji:'🍽️' },
+  coffee:     { label:'Coffee',    emoji:'☕' },
+  'non-coffee':{ label:'Non-Coffee',emoji:'🍵' },
+  food:       { label:'Food',      emoji:'🍽️' },
   pastry:     { label:'Pastry',    emoji:'🥐' },
 };
 
@@ -11,14 +11,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   await initAuth(); fetchProducts();
 });
 
-// ── Fetch ──
 async function fetchProducts() {
   if (SUPABASE_URL.includes('YOUR_PROJECT')) { APP.products = mock(); render(); return; }
   const res = await sb.from('products').select('*').order('created_at', { ascending: false });
   APP.products = res.data || []; render();
 }
 
-// ── Render ──
 function render() {
   const content = $('#menuContent');
   const empty = $('#emptyState');
@@ -30,24 +28,20 @@ function render() {
     return okCat && okQ && (p.available || APP.profile?.role === 'admin');
   });
 
-  if (!filtered.length) {
-    content.innerHTML = ''; empty.style.display = 'flex'; hero.style.display = 'none'; return;
-  }
+  if (!filtered.length) { content.innerHTML = ''; empty.style.display = 'flex'; hero.style.display = 'none'; return; }
   empty.style.display = 'none'; hero.style.display = '';
 
   // Hero: first item
-  const heroItem = filtered[0];
-  const heroCat = CAT[heroItem.category] || { emoji:'☕', label:heroItem.category };
-  $('#heroImg').src = heroItem.image_url || '';
-  $('#heroImg').alt = heroItem.name;
+  const h = filtered[0];
+  $('#heroImg').src = h.image_url || '';
+  $('#heroImg').alt = h.name;
   $('#heroImg').onerror = function(){ this.style.display='none'; };
-  $('#heroTag').textContent = heroCat.emoji + ' ' + heroCat.label;
-  $('#heroTitle').textContent = heroItem.name;
-  $('#heroDesc').textContent = heroItem.description || '';
-  $('#heroPrice').textContent = 'Rp' + heroItem.price.toLocaleString('id-ID');
-  $('#heroAddBtn').onclick = () => addToCart(heroItem);
+  $('#heroName').textContent = h.name;
+  $('#heroDesc').textContent = h.description || '';
+  $('#heroPrice').textContent = 'Rp' + h.price.toLocaleString('id-ID');
+  $('#heroAddBtn').onclick = () => addToCart(h);
 
-  // Group by category
+  // Group remaining by category
   const cats = {};
   filtered.slice(1).forEach(p => {
     if (!cats[p.category]) cats[p.category] = [];
@@ -61,91 +55,71 @@ function render() {
     if (!items || !items.length) return;
     const cat = CAT[catKey] || { emoji:'☕', label:catKey };
 
-    const section = document.createElement('section');
-    section.className = 'cat-section';
+    const section = document.createElement('div');
+    section.className = 'section';
+    section.innerHTML = `<h2 class="section-title">${cat.emoji} ${cat.label}</h2>`;
 
-    const header = document.createElement('div');
-    header.className = 'cat-header';
-    header.innerHTML = `<h2 class="cat-title">${cat.emoji} ${cat.label}</h2><span class="cat-count">${items.length} item</span>`;
-
-    const list = document.createElement('div');
-    list.className = 'menu-list';
+    const grid = document.createElement('div');
+    grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px';
 
     items.forEach(item => {
-      const row = document.createElement('div');
-      row.className = 'menu-item' + (item.available ? '' : ' menu-unavailable');
-      row.innerHTML = `
-        ${item.image_url
-          ? `<img class="menu-thumb" src="${item.image_url}" alt="${item.name}" loading="lazy" onerror="this.outerHTML='<div class=\\'menu-thumb-placeholder\\'>${cat.emoji}</div>'">`
-          : `<div class="menu-thumb-placeholder">${cat.emoji}</div>`
-        }
-        <div class="menu-info">
-          <div class="menu-name">${item.name}</div>
-          <div class="menu-desc">${item.description || ''}</div>
+      const card = document.createElement('div');
+      card.className = 'menu-card' + (item.available ? '' : ' menu-unavailable');
+      card.innerHTML = `
+        ${item.image_url ? `<img class="menu-card-img" src="${item.image_url}" alt="${item.name}" loading="lazy" onerror="this.style.display='none'">` : `<div class="menu-card-img" style="display:flex;align-items:center;justify-content:center;font-size:1.5rem;background:var(--card)">${cat.emoji}</div>`}
+        <div class="menu-card-info">
+          <div class="menu-card-name">${item.name}</div>
+          <div class="menu-card-desc">${item.description || ''}</div>
+          <div class="menu-card-price">Rp${item.price.toLocaleString('id-ID')}</div>
         </div>
-        <div class="menu-right">
-          <span class="menu-price">Rp${item.price.toLocaleString('id-ID')}</span>
-          ${item.available ? `<button class="menu-add" title="Tambah ke keranjang">+</button>` : ''}
-        </div>`;
-      const addBtn = row.querySelector('.menu-add');
+        ${item.available ? `<button class="menu-card-add" title="Add to cart">+</button>` : ''}`;
+      const addBtn = card.querySelector('.menu-card-add');
       if (addBtn) addBtn.addEventListener('click', () => {
         addToCart(item);
-        // anime.js pulse on button
-        if (!reduced()) anime({ targets: addBtn, scale:[1,1.3,1], duration:300, easing:'easeOutBack' });
+        if (!reduced()) anime({ targets:addBtn, scale:[1,1.3,1], duration:250, easing:'easeOutBack' });
       });
-      list.appendChild(row);
+      grid.appendChild(card);
     });
 
-    section.appendChild(header);
-    section.appendChild(list);
+    section.appendChild(grid);
     content.appendChild(section);
   });
 
-  // Animate sections in
-  if (!reduced()) {
-    anime({ targets: '.cat-section', opacity:[0,1], translateY:[12,0], duration:300, delay:anime.stagger(80), easing:'easeOutQuart' });
-  }
+  if (!reduced()) anime({ targets:'.menu-card', opacity:[0,1], translateY:[8,0], duration:200, delay:anime.stagger(25), easing:'easeOutQuart' });
 }
 
 // ── Cart ──
-function addToCart(product) {
-  const existing = APP.cart.find(i => i.id === product.id);
+function addToCart(p) {
+  const existing = APP.cart.find(i => i.id === p.id);
   if (existing) existing.qty++;
-  else APP.cart.push({ id:product.id, name:product.name, price:product.price, qty:1 });
-  saveCart(); renderCartUI();
-  showToast(`${product.name} ditambahkan`, 'success');
+  else APP.cart.push({ id:p.id, name:p.name, price:p.price, qty:1 });
+  saveCart(); renderCart();
+  showToast(`${p.name} ditambahkan`, 'success');
 }
 
-function removeFromCart(id) {
-  APP.cart = APP.cart.filter(i => i.id !== id);
-  saveCart(); renderCartUI();
-}
+function removeFromCart(id) { APP.cart = APP.cart.filter(i => i.id !== id); saveCart(); renderCart(); }
 
 function updateQty(id, delta) {
   const item = APP.cart.find(i => i.id === id);
   if (!item) return;
   item.qty += delta;
   if (item.qty <= 0) APP.cart = APP.cart.filter(i => i.id !== id);
-  saveCart(); renderCartUI();
+  saveCart(); renderCart();
 }
 
-function renderCartUI() {
-  const body = $('#cartBody');
+function renderCart() {
+  const items = $('#cartItems');
+  const sub = $('#cartSubtotal');
+  const tax = $('#cartTax');
   const total = $('#cartTotal');
-  const badge = $('#cartBadge');
   const btn = $('#checkoutBtn');
-  const count = APP.cart.reduce((s,i) => s + i.qty, 0);
-
-  // FAB badge
-  if (count > 0) { badge.style.display = 'flex'; badge.textContent = count; }
-  else badge.style.display = 'none';
 
   if (!APP.cart.length) {
-    body.innerHTML = '<p style="color:var(--c3);text-align:center;padding:24px;font-size:13px">Keranjang kosong</p>';
-    total.textContent = 'Rp0'; btn.disabled = true; return;
+    items.innerHTML = '<div class="cart-empty">Keranjang kosong</div>';
+    sub.textContent = 'Rp0'; tax.textContent = 'Rp0'; total.textContent = 'Rp0'; btn.disabled = true; return;
   }
   btn.disabled = false;
-  body.innerHTML = '';
+  items.innerHTML = '';
   APP.cart.forEach(item => {
     const row = document.createElement('div');
     row.className = 'cart-item';
@@ -159,92 +133,56 @@ function renderCartUI() {
         <span>${item.qty}</span>
         <button onclick="updateQty('${item.id}',1)">+</button>
       </div>`;
-    body.appendChild(row);
+    items.appendChild(row);
   });
-  const tot = APP.cart.reduce((s,i) => s + i.price * i.qty, 0);
-  total.textContent = 'Rp' + tot.toLocaleString('id-ID');
-}
 
-function toggleCart() {
-  const panel = $('#cartPanel');
-  const overlay = $('#cartOverlay');
-  const isOpen = panel.classList.contains('open');
-  if (isOpen) { panel.classList.remove('open'); overlay.classList.remove('open'); }
-  else { panel.classList.add('open'); overlay.classList.add('open'); renderCartUI(); }
+  const subtotal = APP.cart.reduce((s,i) => s + i.price * i.qty, 0);
+  const taxAmount = Math.round(subtotal * 0.1);
+  sub.textContent = 'Rp' + subtotal.toLocaleString('id-ID');
+  tax.textContent = 'Rp' + taxAmount.toLocaleString('id-ID');
+  total.textContent = 'Rp' + (subtotal + taxAmount).toLocaleString('id-ID');
 }
 
 async function handleCheckout() {
   if (!APP.user) { openAuthModal('login'); return; }
   if (!APP.cart.length) return;
   const note = prompt('Catatan (opsional):') || '';
-  const total = APP.cart.reduce((s,i) => s + i.price * i.qty, 0);
+  const subtotal = APP.cart.reduce((s,i) => s + i.price * i.qty, 0);
+  const total = subtotal + Math.round(subtotal * 0.1);
   const { data: order, error } = await sb.from('orders').insert({ user_id:APP.user.id, total, note }).select().single();
   if (error) return showToast('Gagal membuat pesanan', 'error');
   const items = APP.cart.map(i => ({ order_id:order.id, product_id:i.id, quantity:i.qty, price:i.price }));
   await sb.from('order_items').insert(items);
-  APP.cart = []; saveCart(); renderCartUI(); toggleCart();
+  APP.cart = []; saveCart(); renderCart();
   showToast('Pesanan berhasil! ☕', 'success');
 }
 
 // ── Events ──
 function bindEvents() {
-  $('#cartFab').addEventListener('click', toggleCart);
-  $('#closeCart').addEventListener('click', toggleCart);
-  $('#cartOverlay').addEventListener('click', toggleCart);
   $('#checkoutBtn').addEventListener('click', handleCheckout);
-
-  // Search
   let st;
   $('#searchInput').addEventListener('input', e => {
     clearTimeout(st);
     st = setTimeout(() => { APP.searchQuery = e.target.value.trim().toLowerCase(); render(); }, 200);
   });
-
-  // Filter pills
   $('#filterNav').addEventListener('click', e => {
-    const pill = e.target.closest('.nav-pill');
-    if (!pill) return;
-    document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('active'));
-    pill.classList.add('active');
-    APP.activeFilter = pill.dataset.cat;
-    if (!reduced()) anime({ targets:pill, scale:[0.92,1.05,1], duration:250, easing:'easeOutBack' });
+    const tab = e.target.closest('.nav-tab');
+    if (!tab) return;
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    APP.activeFilter = tab.dataset.cat;
+    if (!reduced()) anime({ targets:tab, scale:[0.92,1.05,1], duration:250, easing:'easeOutBack' });
     render();
   });
-
-  // Auth modal backdrop
   $('#authModal').addEventListener('click', e => { if (e.target === $('#authModal')) closeModal($('#authModal')); });
-
-  // Escape
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') {
-      if ($('#authModal').open) closeModal($('#authModal'));
-      if ($('#cartPanel').classList.contains('open')) toggleCart();
-    }
-  });
-
-  // Swipe-to-dismiss on cart panel
-  const cartPanel = $('#cartPanel');
-  let cartStartY = 0, cartDragging = false;
-  cartPanel.addEventListener('touchstart', e => { cartStartY = e.touches[0].clientY; cartDragging = true; }, { passive:true });
-  cartPanel.addEventListener('touchmove', e => {
-    if (!cartDragging) return;
-    const dy = e.touches[0].clientY - cartStartY;
-    if (dy > 0) cartPanel.style.transform = 'translateY(' + Math.min(dy, 150) + 'px)';
-  }, { passive:true });
-  cartPanel.addEventListener('touchend', e => {
-    if (!cartDragging) return;
-    cartDragging = false;
-    cartPanel.style.transform = '';
-    if (e.changedTouches[0].clientY - cartStartY > 80) toggleCart();
-  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#authModal').open) closeModal($('#authModal')); });
 }
 
-function openModal(el) { el.showModal(); const p = el.querySelector('.modal-card'); if (p && !reduced()) anime({ targets:p, opacity:[0,1], translateY:[12,0], scale:[0.96,1], duration:220, easing:'easeOutQuart' }); }
+function openModal(el) { el.showModal(); const p = el.querySelector('.modal-card'); if (p && !reduced()) anime({ targets:p, opacity:[0,1], translateY:[12,0], scale:[0.96,1], duration:200, easing:'easeOutQuart' }); }
 function closeModal(el) { const p = el.querySelector('.modal-card'); const f = () => el.close(); if (p && !reduced()) anime({ targets:p, opacity:0, translateY:8, duration:150, easing:'easeInQuad', complete:f }); else f(); }
-function showToast(msg, type) { type = type || 'success'; const el = document.createElement('div'); el.className = 'toast ' + type; el.innerHTML = `<span class="toast-dot"></span>${msg}`; $('#toastStack').appendChild(el); anime({ targets:el, translateX:['110%','0%'], opacity:[0,1], duration:240, easing:'easeOutQuart' }); setTimeout(() => anime({ targets:el, translateX:'110%', opacity:0, duration:200, easing:'easeInQuad', complete:() => el.remove() }), 2800); }
+function showToast(msg, type) { type = type || 'success'; const el = document.createElement('div'); el.className = 'toast ' + type; el.innerHTML = `<span class="toast-dot"></span>${msg}`; $('#toastStack').appendChild(el); anime({ targets:el, translateX:['110%','0%'], opacity:[0,1], duration:200, easing:'easeOutQuart' }); setTimeout(() => anime({ targets:el, translateX:'110%', opacity:0, duration:150, easing:'easeInQuad', complete:() => el.remove() }), 2500); }
 function reduced() { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
 
-// ── Mock ──
 function mock() {
   return [
     { id:'p1', name:'Es Kopi Susu', description:'Kopi robusta + susu segar + gula aren', price:28000, category:'coffee', image_url:'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=600&q=80', available:true },

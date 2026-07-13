@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ngopi Dulu — Kopi & Makanan Enak</title>
-  <meta name="description" content="Ngopi Dulu — pesan kopi dan makanan favoritmu. Online ordering, cepat dan praktis.">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,12 +13,12 @@
     <a href="/" class="logo">Ngopi Dulu</a>
     <div class="search-wrap">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.34-4.34"/></svg>
-      <input id="searchInput" class="search-input" type="text" placeholder="Cari menu..." autocomplete="off">
+      <input id="searchInput" class="search-input" type="text" placeholder="Search menu..." autocomplete="off">
     </div>
     <div class="topbar-end">
       <div id="guestActions">
-        <button class="btn btn-ghost" id="loginBtn">Masuk</button>
-        <button class="btn btn-primary" id="registerBtn">Daftar</button>
+        <button class="btn btn-ghost" id="loginBtn">Login</button>
+        <button class="btn btn-primary" id="registerBtn">Sign Up</button>
       </div>
       <div id="userActions" style="display:none">
         <div class="user-chip" id="userChip">
@@ -28,7 +27,7 @@
           <div class="user-menu" id="userMenu">
             <button class="user-menu-item" id="myOrdersBtn">Pesanan Saya</button>
             <button class="user-menu-item" id="adminBtn" style="display:none">Panel Admin</button>
-            <button class="user-menu-item danger" id="logoutBtn">Keluar</button>
+            <button class="user-menu-item danger" id="logoutBtn">Logout</button>
           </div>
         </div>
       </div>
@@ -36,69 +35,62 @@
   </div>
 </header>
 
-<!-- Nav pills -->
-<nav class="nav-pills" id="filterNav">
-  <button class="nav-pill active" data-cat="all">Semua Menu</button>
-  <button class="nav-pill" data-cat="coffee">☕ Kopi</button>
-  <button class="nav-pill" data-cat="non-coffee">🍵 Non-Kopi</button>
-  <button class="nav-pill" data-cat="food">🍽️ Makanan</button>
-  <button class="nav-pill" data-cat="pastry">🥐 Pastry</button>
+<nav class="nav-tabs" id="filterNav">
+  <button class="nav-tab active" data-cat="all">All</button>
+  <button class="nav-tab" data-cat="coffee">Coffee</button>
+  <button class="nav-tab" data-cat="non-coffee">Non-Coffee</button>
+  <button class="nav-tab" data-cat="food">Food</button>
+  <button class="nav-tab" data-cat="pastry">Pastry</button>
 </nav>
 
-<!-- Hero -->
-<section class="hero" id="heroSection">
-  <div class="hero-card">
-    <img class="hero-img" id="heroImg" src="" alt="">
-    <div class="hero-content">
-      <span class="hero-tag" id="heroTag"></span>
-      <h2 class="hero-title" id="heroTitle"></h2>
-      <p class="hero-desc" id="heroDesc"></p>
-      <span class="hero-price" id="heroPrice"></span>
+<div class="app-layout">
+  <!-- Left: Menu -->
+  <div class="menu-area">
+    <!-- Hero -->
+    <section class="hero" id="heroSection">
+      <img class="hero-img" id="heroImg" src="" alt="">
+      <div class="hero-content">
+        <span class="hero-label">Featured Product</span>
+        <h2 class="hero-name" id="heroName"></h2>
+        <p class="hero-desc" id="heroDesc"></p>
+        <span class="hero-price" id="heroPrice"></span>
+        <button class="btn btn-primary" id="heroAddBtn" style="width:fit-content">+ Add to Cart</button>
+      </div>
+    </section>
+    <!-- Menu sections -->
+    <div id="menuContent"></div>
+    <div class="empty" id="emptyState" style="display:none">
+      <div class="empty-icon">☕</div>
+      <h3>No items found</h3>
+      <p>Try a different search or category.</p>
     </div>
-    <div class="hero-cta">
-      <button class="btn btn-primary" id="heroAddBtn">+ Keranjang</button>
+  </div>
+
+  <!-- Right: Cart sidebar -->
+  <aside class="sidebar" id="cartSidebar">
+    <div class="cart-sidebar">
+      <div class="cart-head">
+        <h3>Keranjang Belanja</h3>
+        <button class="cart-close" id="closeCartSidebar">✕</button>
+      </div>
+      <div class="cart-items" id="cartItems">
+        <div class="cart-empty">Keranjang kosong</div>
+      </div>
+      <div class="cart-foot">
+        <div class="cart-row"><span>Subtotal</span><span id="cartSubtotal">Rp0</span></div>
+        <div class="cart-row"><span>Pajak (10%)</span><span id="cartTax">Rp0</span></div>
+        <div class="cart-row total"><span>Total</span><span id="cartTotal">Rp0</span></div>
+        <button class="btn btn-primary cart-checkout" id="checkoutBtn" disabled>Checkout</button>
+      </div>
     </div>
-  </div>
-</section>
-
-<!-- Menu -->
-<main class="content" id="menuContent"></main>
-
-<!-- Empty -->
-<div class="empty" id="emptyState" style="display:none">
-  <div class="empty-icon">☕</div>
-  <h3>Menu tidak ditemukan</h3>
-  <p>Coba kata kunci lain atau ubah filter.</p>
-</div>
-
-<!-- FAB Cart -->
-<button class="fab-cart" id="cartFab" title="Keranjang">
-  🛒
-  <span class="fab-badge" id="cartBadge" style="display:none">0</span>
-</button>
-
-<!-- Cart panel -->
-<div class="cart-overlay" id="cartOverlay"></div>
-<div class="cart-panel" id="cartPanel">
-  <div class="cart-handle"></div>
-  <div class="cart-head">
-    <h3>Keranjang</h3>
-    <button class="cart-close" id="closeCart">✕</button>
-  </div>
-  <div class="cart-body" id="cartBody">
-    <p style="color:var(--c3);text-align:center;padding:24px;font-size:13px">Keranjang kosong</p>
-  </div>
-  <div class="cart-foot">
-    <div class="cart-total"><span>Total</span><span id="cartTotal">Rp0</span></div>
-    <button class="btn btn-primary" id="checkoutBtn" disabled>Pesan Sekarang</button>
-  </div>
+  </aside>
 </div>
 
 <!-- Auth modal -->
 <dialog class="modal" id="authModal">
   <div class="modal-card">
     <div class="modal-head">
-      <h2 id="authTitle">Masuk</h2>
+      <h2 id="authTitle">Login</h2>
       <button class="modal-close" id="closeAuth">✕</button>
     </div>
     <div class="modal-tabs">
@@ -107,7 +99,7 @@
     </div>
     <div class="modal-body">
       <form id="loginForm" novalidate>
-        <div class="field"><label class="field-label">Email</label><input class="input" type="email" id="loginEmail" required placeholder="kamu@email.com"></div>
+        <div class="field"><label class="field-label">Email</label><input class="input" type="email" id="loginEmail" required placeholder="Kamu@email.com"></div>
         <div class="field"><label class="field-label">Password</label><input class="input" type="password" id="loginPassword" required placeholder="••••••••"></div>
         <button type="submit" class="btn btn-primary" style="width:100%;margin-top:16px;height:38px" id="loginBtn2">Masuk</button>
         <p class="auth-error" id="loginError" style="display:none"></p>
@@ -115,7 +107,7 @@
       <form id="registerForm" novalidate style="display:none">
         <div class="field"><label class="field-label">Nama Lengkap</label><input class="input" type="text" id="regFullName" required placeholder="Budi Santoso"></div>
         <div class="field"><label class="field-label">Username <span>(unik)</span></label><input class="input" type="text" id="regUsername" required placeholder="budisantoso" pattern="[a-z0-9_]+"></div>
-        <div class="field"><label class="field-label">Email</label><input class="input" type="email" id="regEmail" required placeholder="kamu@email.com"></div>
+        <div class="field"><label class="field-label">Email</label><input class="input" type="email" id="regEmail" required placeholder="Kamu@email.com"></div>
         <div class="field"><label class="field-label">Password <span>(min. 8)</span></label><input class="input" type="password" id="regPassword" required placeholder="••••••••" minlength="8"></div>
         <button type="submit" class="btn btn-primary" style="width:100%;margin-top:16px;height:38px" id="registerBtn2">Buat Akun</button>
         <p class="auth-error" id="registerError" style="display:none"></p>
@@ -142,7 +134,7 @@
         <div class="field"><label class="field-label">Nama</label><input class="input" type="text" id="prodName" required placeholder="Es Kopi Susu"></div>
         <div class="field" style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
           <div><label class="field-label">Harga (Rp)</label><input class="input" type="number" id="prodPrice" required placeholder="28000" min="1"></div>
-          <div><label class="field-label">Kategori</label><select class="input" id="prodCat" required style="cursor:pointer"><option value="">Pilih</option><option value="coffee">Kopi</option><option value="non-coffee">Non-Kopi</option><option value="food">Makanan</option><option value="pastry">Pastry</option></select></div>
+          <div><label class="field-label">Kategori</label><select class="input" id="prodCat" required style="cursor:pointer"><option value="">Pilih</option><option value="coffee">Coffee</option><option value="non-coffee">Non-Coffee</option><option value="food">Food</option><option value="pastry">Pastry</option></select></div>
         </div>
         <div class="field" style="margin-top:10px"><label class="field-label">Deskripsi</label><input class="input" type="text" id="prodDesc" placeholder="Opsional"></div>
         <div class="field" style="margin-top:10px"><label class="field-label">URL Gambar</label><input class="input" type="url" id="prodImg" placeholder="https://..."></div>
