@@ -1,6 +1,6 @@
 // config.js — GANTI dengan credentials Supabase kamu
-const SUPABASE_URL = 'https://YOUR_PROJECT.supabase.co';
-const SUPABASE_KEY = 'YOUR_ANON_KEY';
+const SUPABASE_URL = 'https://hdyqjzreorubcxdxagtp.supabase.co';
+const SUPABASE_KEY = 'eyJhbG...fYu8';
 
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { persistSession: true, autoRefreshToken: true }
