@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ngopi Dulu — Kopi & Makanan Enak</title>
+  <meta name="description" content="Ngopi Dulu — pesan kopi dan makanan favoritmu. Online ordering, cepat dan praktis.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a href="/" class="wordmark">Ngopi Dulu</a>
+    <div class="search-wrap">
+      <span class="search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.34-4.34"/></svg></span>
+      <input id="searchInput" class="search-input" type="text" placeholder="Cari menu..." autocomplete="off">
+    </div>
+    <div class="topbar-end">
+      <div id="guestActions">
+        <button class="btn btn-ghost" id="loginBtn">Masuk</button>
+        <button class="btn btn-primary" id="registerBtn">Daftar</button>
+      </div>
+      <div id="userActions" style="display:none">
+        <button class="cart-btn" id="cartBtn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+          <span class="cart-count" id="cartCount"></span>
+        </button>
+        <div class="user-chip" id="userChip">
+          <div class="user-avatar" id="userAvatar"></div>
+          <span id="userDisplayName"></span>
+          <div class="user-menu" id="userMenu">
+            <button class="user-menu-item" id="myOrdersBtn">Pesanan Saya</button>
+            <button class="user-menu-item admin-only" id="adminBtn" style="display:none">Panel Admin</button>
+            <button class="user-menu-item danger" id="logoutBtn">Keluar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<nav class="filterbar" id="filterNav">
+  <div class="filterbar-inner">
+    <button class="filter-btn active" data-cat="all">Semua</button>
+    <button class="filter-btn" data-cat="coffee"><span class="filter-dot"></span>Kopi</button>
+    <button class="filter-btn" data-cat="non-coffee"><span class="filter-dot"></span>Non-Kopi</button>
+    <button class="filter-btn" data-cat="food"><span class="filter-dot"></span>Makanan</button>
+    <button class="filter-btn" data-cat="pastry"><span class="filter-dot"></span>Pastry</button>
+  </div>
+</nav>
+
+<main class="content">
+  <div class="product-grid" id="productGrid"></div>
+  <div class="empty-state" id="emptyState" style="display:none">
+    <div class="empty-icon">☕</div>
+    <h3>Menu tidak ditemukan</h3>
+    <p>Coba kata kunci lain atau ubah filter kategori.</p>
+  </div>
+</main>
+
+<!-- ═══ CART DRAWER ═══ -->
+<div class="cart-overlay" id="cartOverlay"></div>
+<div class="cart-drawer" id="cartDrawer">
+  <div class="cart-drawer-header">
+    <h2>Keranjang 🛒</h2>
+    <button class="btn-icon" id="closeCart">✕</button>
+  </div>
+  <div class="cart-items" id="cartItems">
+    <p style="color:var(--c2);text-align:center;padding:24px;font-size:13px">Keranjang kosong</p>
+  </div>
+  <div class="cart-footer">
+    <div class="cart-footer-total"><span>Total</span><span id="cartTotal">Rp0</span></div>
+    <button class="btn btn-primary" id="checkoutBtn" disabled>Pesan Sekarang</button>
+  </div>
+</div>
+
+<!-- ═══ MODAL: AUTH ═══ -->
+<dialog class="modal" id="authModal">
+  <div class="modal-panel">
+    <div class="modal-header">
+      <h2 class="modal-title" id="authModalTitle">Masuk ke Ngopi Dulu</h2>
+      <button class="btn-icon" id="closeAuthModal" aria-label="Tutup">✕</button>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-tab="login">Masuk</button>
+      <button class="auth-tab" data-tab="register">Daftar</button>
+    </div>
+    <div class="modal-body">
+      <form id="loginForm" novalidate>
+        <div class="field"><label class="field-label" for="loginEmail">Email</label><input class="input" type="email" id="loginEmail" required placeholder="kamu@email.com" autocomplete="email"></div>
+        <div class="field"><label class="field-label" for="loginPassword">Password</label><input class="input" type="password" id="loginPassword" required placeholder="••••••••" autocomplete="current-password"></div>
+        <button type="submit" class="btn btn-primary" style="width:100%;margin-top:16px;height:40px" id="loginSubmitBtn">Masuk</button>
+        <p class="auth-error" id="loginError" style="display:none"></p>
+      </form>
+      <form id="registerForm" novalidate style="display:none">
+        <div class="field"><label class="field-label" for="regFullName">Nama Lengkap</label><input class="input" type="text" id="regFullName" required placeholder="Budi Santoso"></div>
+        <div class="field"><label class="field-label" for="regUsername">Username <span>(unik)</span></label><input class="input" type="text" id="regUsername" required placeholder="budisantoso" pattern="[a-z0-9_]+"></div>
+        <div class="field"><label class="field-label" for="regEmail">Email</label><input class="input" type="email" id="regEmail" required placeholder="kamu@email.com" autocomplete="email"></div>
+        <div class="field"><label class="field-label" for="regPassword">Password <span>(min. 8)</span></label><input class="input" type="password" id="regPassword" required placeholder="••••••••" minlength="8" autocomplete="new-password"></div>
+        <button type="submit" class="btn btn-primary" style="width:100%;margin-top:16px;height:40px" id="registerSubmitBtn">Buat Akun</button>
+        <p class="auth-error" id="registerError" style="display:none"></p>
+      </form>
+    </div>
+  </div>
+</dialog>
+
+<!-- ═══ ADMIN PANEL ═══ -->
+<aside class="admin-panel" id="adminPanel">
+  <div class="admin-panel-header">
+    <h2 style="font-size:18px;font-weight:600">Panel Admin</h2>
+    <button class="btn-icon" id="closeAdminPanel">✕</button>
+  </div>
+  <div class="admin-tabs">
+    <button class="admin-tab active" data-section="orders">Pesanan</button>
+    <button class="admin-tab" data-section="menu">Menu</button>
+  </div>
+  <div id="adminOrders" class="admin-section"><div id="ordersList"></div></div>
+  <div id="adminMenu" class="admin-section" style="display:none">
+    <div class="add-product-form">
+      <h3 style="font-size:14px;font-weight:600;margin-bottom:12px">Tambah Menu</h3>
+      <form id="addProductForm" novalidate>
+        <div class="field"><label class="field-label">Nama</label><input class="input" type="text" id="prodName" required placeholder="Es Kopi Susu"></div>
+        <div class="field-row" style="margin-top:12px">
+          <div class="field"><label class="field-label">Harga (Rp)</label><input class="input" type="number" id="prodPrice" required placeholder="28000" min="1"></div>
+          <div class="field"><label class="field-label">Kategori</label><select class="select" id="prodCategory" required><option value="">Pilih</option><option value="coffee">Kopi</option><option value="non-coffee">Non-Kopi</option><option value="food">Makanan</option><option value="pastry">Pastry</option></select></div>
+        </div>
+        <div class="field"><label class="field-label">Deskripsi</label><input class="input" type="text" id="prodDesc" placeholder="Opsional"></div>
+        <div class="field"><label class="field-label">URL Gambar</label><input class="input" type="url" id="prodImage" placeholder="https://..."></div>
+        <button type="submit" class="btn btn-primary" style="width:100%;margin-top:12px">Tambah Menu</button>
+      </form>
+    </div>
+    <div id="productsList"></div>
+  </div>
+</aside>
+<div class="admin-overlay" id="adminOverlay"></div>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="auth.js"></script>
+<script src="admin.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
